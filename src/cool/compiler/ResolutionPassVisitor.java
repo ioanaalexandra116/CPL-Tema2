@@ -20,10 +20,14 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
     }
     @Override
     public TypeSymbol visit(Id id) {
+        if (id.token.getText().equals("true") || id.token.getText().equals("false")) {
+            return TypeSymbol.BOOL;
+        }
         Scope currentScope = id.getScope();
         if (currentScope == null) {
             return null;
         }
+        var type = (IdSymbol) currentScope.lookup(id.token.getText());
         if (currentScope.lookup(id.token.getText()) == null) {
             SymbolTable.error(
                     id.ctx,
@@ -32,12 +36,12 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
             );
             return null;
         }
-        return null;
+        return type.getType();
     }
 
     @Override
     public TypeSymbol visit(Int intt) {
-        return null;
+        return TypeSymbol.INT;
     }
 
     @Override
@@ -47,24 +51,56 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
 
     @Override
     public TypeSymbol visit(Bool bl) {
-        return null;
+        return TypeSymbol.BOOL;
     }
 
     @Override
     public TypeSymbol visit(Plus ps) {
-        ps.left.accept(this);
-        ps.right.accept(this);
-        return null;
+        TypeSymbol leftType = ps.left.accept(this);
+        TypeSymbol rightType = ps.right.accept(this);
+
+        if (leftType != null && leftType != TypeSymbol.INT && !leftType.getName().equals("Int")) {
+            SymbolTable.error(
+                    ps.ctx,
+                    ps.left.token,
+                    "Operand of + has type " + leftType.getName() + " instead of Int"
+            );
+        }
+        if (rightType != null && rightType != TypeSymbol.INT && !rightType.getName().equals("Int")) {
+            SymbolTable.error(
+                    ps.ctx,
+                    ps.right.token,
+                    "Operand of + has type " + rightType.getName() + " instead of Int"
+            );
+        }
+
+        return TypeSymbol.INT;
     }
 
     @Override
     public TypeSymbol visit(Stringg str) {
-        return null;
+        return TypeSymbol.STRING;
     }
 
     @Override
     public TypeSymbol visit(Minus mns) {
-        return null;
+        TypeSymbol leftType = mns.left.accept(this);
+        TypeSymbol rightType = mns.right.accept(this);
+        if (leftType != null && leftType != TypeSymbol.INT && !leftType.getName().equals("Int")) {
+            SymbolTable.error(
+                    mns.ctx,
+                    mns.left.token,
+                    "Operand of - has type " + leftType.getName() + " instead of Int"
+            );
+        }
+        if (rightType != null && rightType != TypeSymbol.INT && !rightType.getName().equals("Int")) {
+            SymbolTable.error(
+                    mns.ctx,
+                    mns.right.token,
+                    "Operand of - has type " + rightType.getName() + " instead of Int"
+            );
+        }
+        return TypeSymbol.INT;
     }
 
     @Override
@@ -76,17 +112,57 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
 
     @Override
     public TypeSymbol visit(Multiply mlt) {
-        return null;
+        TypeSymbol leftType = mlt.left.accept(this);
+        TypeSymbol rightType = mlt.right.accept(this);
+        if (leftType != null && leftType != TypeSymbol.INT && !leftType.getName().equals("Int")) {
+            SymbolTable.error(
+                    mlt.ctx,
+                    mlt.left.token,
+                    "Operand of * has type " + leftType.getName() + " instead of Int"
+            );
+        }
+        if (rightType != null && rightType != TypeSymbol.INT && !rightType.getName().equals("Int")) {
+            SymbolTable.error(
+                    mlt.ctx,
+                    mlt.right.token,
+                    "Operand of * has type " + rightType.getName() + " instead of Int"
+            );
+        }
+        return TypeSymbol.INT;
     }
 
     @Override
     public TypeSymbol visit(Divide div) {
-        return null;
+        TypeSymbol leftType = div.left.accept(this);
+        TypeSymbol rightType = div.right.accept(this);
+        if (leftType != null && leftType != TypeSymbol.INT && !leftType.getName().equals("Int")) {
+            SymbolTable.error(
+                    div.ctx,
+                    div.left.token,
+                    "Operand of / has type " + leftType.getName() + " instead of Int"
+            );
+        }
+        if (rightType != null && rightType != TypeSymbol.INT && !rightType.getName().equals("Int")) {
+            SymbolTable.error(
+                    div.ctx,
+                    div.right.token,
+                    "Operand of / has type " + rightType.getName() + " instead of Int"
+            );
+        }
+        return TypeSymbol.INT;
     }
 
     @Override
     public TypeSymbol visit(UnaryMinus unm) {
-        return null;
+        TypeSymbol exprType = unm.expr.accept(this);
+        if (exprType != null && exprType != TypeSymbol.INT && !exprType.getName().equals("Int")) {
+            SymbolTable.error(
+                    unm.ctx,
+                    unm.expr.token,
+                    "Operand of ~ has type " + exprType.getName() + " instead of Int"
+            );
+        }
+        return TypeSymbol.INT;
     }
 
     @Override
@@ -258,6 +334,7 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
 
         md.params.forEach(p -> p.accept(this));
         md.idk.accept(this);
+//        return new TypeSymbol(md.id.token.getText(), md.type.token.getText());
         return null;
     }
 
@@ -288,12 +365,15 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
             }
             parent = SymbolTable.globals.lookup(((TypeSymbol) parent).getParentName());
         }
+        if (at.value != null)
+            at.value.accept(this);
 
         return null;
     }
 
     @Override
     public TypeSymbol visit(Paren pr) {
+        pr.expr.accept(this);
         return null;
     }
 
@@ -347,8 +427,9 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
             if (att.value != null)
                 att.value.accept(this);
         }
-        let.expr.accept(this);
+        TypeSymbol type = let.expr.accept(this);
         return null;
+//        return type;
     }
 
     @Override

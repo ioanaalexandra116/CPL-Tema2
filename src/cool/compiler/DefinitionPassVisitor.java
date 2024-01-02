@@ -55,6 +55,8 @@ public class DefinitionPassVisitor implements ASTVisitor<Void> {
 
     @Override
     public Void visit(Minus mns) {
+        mns.left.accept(this);
+        mns.right.accept(this);
         return null;
     }
 
@@ -67,16 +69,21 @@ public class DefinitionPassVisitor implements ASTVisitor<Void> {
 
     @Override
     public Void visit(Multiply mlt) {
+        mlt.left.accept(this);
+        mlt.right.accept(this);
         return null;
     }
 
     @Override
     public Void visit(Divide div) {
+        div.left.accept(this);
+        div.right.accept(this);
         return null;
     }
 
     @Override
     public Void visit(UnaryMinus unm) {
+        unm.expr.accept(this);
         return null;
     }
 
@@ -242,6 +249,9 @@ public class DefinitionPassVisitor implements ASTVisitor<Void> {
         }
         at.id.setSymbol(symbol);
         at.id.setScope(currentScope);
+        if (at.value != null) {
+            at.value.accept(this);
+        }
         return null;
     }
 
