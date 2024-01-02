@@ -8,6 +8,7 @@ public class DefinitionPassVisitor implements ASTVisitor<Void> {
     Scope currentScope = null;
     private final HashSet<String> illegalParents;
     private int tagCounter = 0;
+    private boolean isLet = false;
     public DefinitionPassVisitor() {
         illegalParents = new HashSet<>();
         illegalParents.add(TypeSymbol.INT.getName());
@@ -18,7 +19,10 @@ public class DefinitionPassVisitor implements ASTVisitor<Void> {
 
     @Override
     public Void visit(Id id) {
-        id.setScope(currentScope);
+        if (isLet) {
+            id.setScope(currentScope.getParent());
+        }
+        else id.setScope(currentScope);
         return null;
     }
 
@@ -283,6 +287,7 @@ public class DefinitionPassVisitor implements ASTVisitor<Void> {
 
     @Override
     public Void visit(Let let) {
+        isLet = true;
         MethodSymbol letSymbol = new MethodSymbol("let-" + tagCounter);
         let.tag = tagCounter;
         tagCounter++;
@@ -303,7 +308,7 @@ public class DefinitionPassVisitor implements ASTVisitor<Void> {
             decl.id.setSymbol(symbol);
             decl.id.setScope(symbol);
             currentScope = symbol;
-            letSymbol.add(symbol);
+//            letSymbol.add(symbol);
             currentScope.add(symbol);
             if (decl.value != null) {
                 decl.value.accept(this);
@@ -317,6 +322,7 @@ public class DefinitionPassVisitor implements ASTVisitor<Void> {
         }
 
         currentScope = currentScope.getParent();
+        isLet = false;
         return null;
     }
 

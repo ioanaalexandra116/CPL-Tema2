@@ -21,7 +21,6 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
     @Override
     public TypeSymbol visit(Id id) {
         Scope currentScope = id.getScope();
-        System.out.println(id.token.getText() + " scope: " + currentScope);
         if (currentScope == null) {
             return null;
         }
@@ -29,7 +28,7 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
             SymbolTable.error(
                     id.ctx,
                     id.token,
-                    "undefined identifier " + id.token.getText()
+                    "Undefined identifier " + id.token.getText()
             );
             return null;
         }

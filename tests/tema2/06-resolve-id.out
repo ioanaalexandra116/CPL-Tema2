@@ -1,14 +1,4 @@
-u scope: u
-z scope: u
-y scope: y
-u scope: y
-x scope: y
-v scope: y
-self scope: g
-u scope: u
-z scope: u
-y scope: y
-u scope: y
-x scope: y
-v scope: y
-self scope: g
+"06-resolve-id.cl", line 3:24, Semantic error: Undefined identifier u
+"06-resolve-id.cl", line 4:24, Semantic error: Undefined identifier y
+"06-resolve-id.cl", line 4:36, Semantic error: Undefined identifier v
+Compilation halted
