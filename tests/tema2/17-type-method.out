@@ -1,0 +1,9 @@
+x scope: f
+y scope: f
+true scope: g
+"17-type-method.cl", line 4:33, Semantic error: undefined identifier true
+b scope: h
+c scope: i
+b scope: j
+B scope: null
+Compilation halted

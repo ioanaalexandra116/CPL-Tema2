@@ -20,6 +20,19 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
     }
     @Override
     public TypeSymbol visit(Id id) {
+        Scope currentScope = id.getScope();
+        System.out.println(id.token.getText() + " scope: " + currentScope);
+        if (currentScope == null) {
+            return null;
+        }
+        if (currentScope.lookup(id.token.getText()) == null) {
+            SymbolTable.error(
+                    id.ctx,
+                    id.token,
+                    "undefined identifier " + id.token.getText()
+            );
+            return null;
+        }
         return null;
     }
 
@@ -40,6 +53,8 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
 
     @Override
     public TypeSymbol visit(Plus ps) {
+        ps.left.accept(this);
+        ps.right.accept(this);
         return null;
     }
 
@@ -55,6 +70,8 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
 
     @Override
     public TypeSymbol visit(Assign asgn) {
+        asgn.id.accept(this);
+        asgn.expr.accept(this);
         return null;
     }
 
@@ -91,8 +108,6 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
     }
 
     private boolean hasCycleUtil(String className, Set<String> visited, Set<String> recursionStack) {
-
-//        System.out.println(className);
         if (recursionStack.contains(className)) {
             return true;  // Cycle detected
         }
@@ -142,7 +157,6 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
         classesArray.add(cl);
 
         HashSet<String> cycle = hasCycle(cl.id.token.getText());
-//        System.out.println(cycle);
         if (cycle != null) {
             for (String className : cycle) {
                 int i = 0;
@@ -240,7 +254,6 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
                         }
                     }
                 }
-                return null;
             }
         }
 
@@ -332,8 +345,10 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
                 );
                 return null;
             }
-//            att.accept(this);
+            if (att.value != null)
+                att.value.accept(this);
         }
+        let.expr.accept(this);
         return null;
     }
 
@@ -349,6 +364,7 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
                 );
                 return null;
             }
+            cs.exprs.get(i).accept(this);
         }
         return null;
     }

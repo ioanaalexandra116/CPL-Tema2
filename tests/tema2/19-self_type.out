@@ -1,2 +1,7 @@
 "19-self_type.cl", line 5:11, Semantic error: Method h of class A has formal parameter y with illegal type SELF_TYPE
+self scope: f1
+self scope: f2
+A scope: null
+B scope: null
+C scope: null
 Compilation halted

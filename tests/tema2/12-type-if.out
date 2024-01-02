@@ -1,0 +1,14 @@
+x scope: f
+x scope: g
+b scope: h
+c scope: i
+b scope: j
+B scope: null
+B scope: null
+x scope: f
+x scope: g
+b scope: h
+c scope: i
+b scope: j
+B scope: null
+B scope: null

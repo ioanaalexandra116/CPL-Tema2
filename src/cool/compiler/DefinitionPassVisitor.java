@@ -18,7 +18,6 @@ public class DefinitionPassVisitor implements ASTVisitor<Void> {
 
     @Override
     public Void visit(Id id) {
-//        System.out.println(id.token.getText());
         id.setScope(currentScope);
         return null;
     }
@@ -158,6 +157,7 @@ public class DefinitionPassVisitor implements ASTVisitor<Void> {
     @Override
     public Void visit(Param pm) {
         MethodSymbol currentMethod = (MethodSymbol) currentScope;
+//        System.out.println(currentMethod.getName() + "id: " + pm.id.token.getText());
         TypeSymbol currentClass = (TypeSymbol) currentMethod.getParent();
         IdSymbol symbol = new IdSymbol(pm.id.token.getText());
         symbol.setType(new TypeSymbol(pm.type.token.getText(), null));
@@ -169,19 +169,19 @@ public class DefinitionPassVisitor implements ASTVisitor<Void> {
             );
             return null;
         }
-        if (!currentMethod.add(symbol)) {
-            SymbolTable.error(
-                    pm.ctx,
-                    pm.id.token,
-                    "Method " + currentMethod.getName() + " of class " + currentClass.getName() + " redefines formal parameter " + pm.id.token.getText()
-            );
-            return null;
-        }
         if (pm.type.token.getText().equals("SELF_TYPE")) {
             SymbolTable.error(
                     pm.ctx,
                     pm.type.token,
                     "Method " + currentMethod.getName() + " of class " + currentClass.getName() + " has formal parameter " + pm.id.token.getText() + " with illegal type " + pm.type.token.getText()
+            );
+            return null;
+        }
+        if (!currentMethod.add(symbol)) {
+            SymbolTable.error(
+                    pm.ctx,
+                    pm.id.token,
+                    "Method " + currentMethod.getName() + " of class " + currentClass.getName() + " redefines formal parameter " + pm.id.token.getText()
             );
             return null;
         }
@@ -207,11 +207,11 @@ public class DefinitionPassVisitor implements ASTVisitor<Void> {
             return null;
         }
         md.params.forEach(p -> p.accept(this));
-        currentScope = currentScope.getParent();
-        md.id.setSymbol(symbol);
-        md.id.setScope(currentScope);
         // TODO: visit body
         md.idk.accept(this);
+        currentScope = currentScope.getParent();
+        md.id.setSymbol(symbol);
+        md.id.setScope(currentClass);
         return null;
     }
 
@@ -299,6 +299,7 @@ public class DefinitionPassVisitor implements ASTVisitor<Void> {
                 continue;
             }
             symbol.setParent(currentScope);
+            symbol.setType(new TypeSymbol(decl.type.token.getText(), null));
             decl.id.setSymbol(symbol);
             decl.id.setScope(symbol);
             currentScope = symbol;

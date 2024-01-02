@@ -1,0 +1,23 @@
+x scope: f
+x scope: g
+true scope: case-1
+"13-type-case.cl", line 12:30, Semantic error: undefined identifier true
+b scope: h
+b scope: case-2
+c scope: case-2
+d scope: case-2
+c scope: i
+b scope: case-3
+c scope: case-3
+d scope: case-3
+d scope: j
+b scope: case-4
+c scope: case-4
+d scope: case-4
+c scope: k
+d scope: case-5
+e scope: case-5
+B scope: null
+C scope: null
+C scope: null
+Compilation halted
