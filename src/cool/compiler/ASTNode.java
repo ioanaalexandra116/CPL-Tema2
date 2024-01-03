@@ -417,9 +417,9 @@ class IsVoid extends Expression {
 }
 
 class New extends Expression {
-    String type;
+    Id type;
 
-    New(String type,
+    New(Id type,
         Token start,
         ParserRuleContext ctx) {
         super(start, ctx);

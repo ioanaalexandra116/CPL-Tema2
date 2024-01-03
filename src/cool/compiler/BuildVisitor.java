@@ -187,7 +187,8 @@ public class BuildVisitor extends CoolParserBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitNew(CoolParser.NewContext ctx) {
-        return new New(ctx.new_type.getText(), ctx.start, ctx);
+        Id type = new Id(ctx.new_type, ctx);
+        return new New(type, ctx.start, ctx);
     }
 
     @Override

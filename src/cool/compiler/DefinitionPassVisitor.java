@@ -305,6 +305,8 @@ public class DefinitionPassVisitor implements ASTVisitor<Void> {
 
     @Override
     public Void visit(While whl) {
+        whl.cond.accept(this);
+        whl.body.accept(this);
         return null;
     }
 

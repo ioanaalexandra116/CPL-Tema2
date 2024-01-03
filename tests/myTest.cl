@@ -1,21 +1,51 @@
 class A {
-    f(a : A) : Object {
-        a <- new A
+    f(x : Int) : Object {
+        x <- case x of
+                 x : Int => 3;
+             esac
     };
 
-    g(a : A) : Object {
-        a <- new B
+    g(x : Int) : Object {
+        x <- case x of
+                 x : Int => 3;
+                 y : String => "3";
+                 z : Bool => true;
+             esac
     };
 
-    h(b : B) : Object {
-        b <- new A
+    h(b : B, c : C, d : D) : Object {
+        b <- case b of
+                 x : Int => b;
+                 y : String => c;
+                 z : Bool => d;
+             esac
     };
 
-    i(b : B) : Object {
-        b <- new C
+    i(b : B, c : C, d : D) : Object {
+        c <- case c of
+                 x : Int => b;
+                 y : String => c;
+                 z : Bool => d;
+             esac
     };
 
-    j : Bool <- not isvoid new B;
+    j(b : B, c : C, d : D) : Object {
+        d <- case d of
+                 x : Int => b;
+                 y : String => c;
+                 z : Bool => d;
+             esac
+    };
+
+    k(c : C, d : D, e : E) : Object {
+        c <- case d of
+                 x : Int => d;
+                 y : String => e;
+             esac
+    };
 };
 
-class B inherits A {};
+class B {};
+class C inherits B {};
+class D inherits C {};
+class E inherits C {};

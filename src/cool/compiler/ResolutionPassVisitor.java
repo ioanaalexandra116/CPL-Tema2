@@ -410,7 +410,6 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
 
         md.params.forEach(p -> p.accept(this));
         md.idk.accept(this);
-//        return new TypeSymbol(md.id.token.getText(), md.type.token.getText());
         return null;
     }
 
@@ -509,7 +508,15 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
 
     @Override
     public TypeSymbol visit(New neww) {
-        return null;
+        if (SymbolTable.globals.lookup(neww.type.token.getText()) == null) {
+            SymbolTable.error(
+                    neww.ctx,
+                    neww.type.token,
+                    "new is used with undefined type " + neww.type.token.getText()
+            );
+            return null;
+        }
+        return (TypeSymbol)SymbolTable.globals.lookup(neww.type.token.getText());
     }
 
     @Override
@@ -524,7 +531,16 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
 
     @Override
     public TypeSymbol visit(While whl) {
-        return null;
+        TypeSymbol condType = whl.cond.accept(this);
+        if ((condType != null && condType != TypeSymbol.BOOL && !condType.getName().equals("Bool"))) {
+            SymbolTable.error(
+                    whl.ctx,
+                    whl.cond.token,
+                    "While condition has type " + condType.getName() + " instead of Bool"
+            );
+        }
+        whl.body.accept(this);
+        return TypeSymbol.OBJECT;
     }
 
     @Override

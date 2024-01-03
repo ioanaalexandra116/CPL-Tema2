@@ -221,7 +221,7 @@ public class PrintTreeVisitor implements ASTVisitor<Void>{
     public Void visit(New neww) {
         printIndent("new");
         indent++;
-        printIndent(neww.type);
+        printIndent(neww.type.token.getText());
         indent--;
         return null;
     }
