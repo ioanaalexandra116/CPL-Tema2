@@ -62,8 +62,17 @@ public class DefinitionPassVisitor implements ASTVisitor<Void> {
 
     @Override
     public Void visit(Assign asgn) {
+//        if (asgn.id.token.getText().equals("self")) {
+//            SymbolTable.error(
+//                    asgn.ctx,
+//                    asgn.id.token,
+//                    "Cannot assign to self"
+//            );
+//            return null;
+//        }
         asgn.id.accept(this);
-        asgn.expr.accept(this);
+        if (asgn.expr != null)
+            asgn.expr.accept(this);
         return null;
     }
 
@@ -257,16 +266,20 @@ public class DefinitionPassVisitor implements ASTVisitor<Void> {
 
     @Override
     public Void visit(Paren pr) {
+        pr.expr.accept(this);
         return null;
     }
 
     @Override
     public Void visit(Relational rel) {
+        rel.left.accept(this);
+        rel.right.accept(this);
         return null;
     }
 
     @Override
     public Void visit(Not not) {
+        not.expr.accept(this);
         return null;
     }
 

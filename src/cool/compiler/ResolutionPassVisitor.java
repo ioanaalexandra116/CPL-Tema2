@@ -2,6 +2,7 @@ package cool.compiler;
 
 import cool.structures.*;
 
+import java.sql.SQLOutput;
 import java.util.*;
 
 public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
@@ -17,6 +18,39 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
             parent = SymbolTable.globals.lookup(((TypeSymbol) parent).getParentName());
         }
         return inheritanceChain;
+    }
+
+    public boolean isParent(String potentialParent, String childClass) {
+        if (potentialParent.equals(childClass)) {
+            return true;
+        }
+        // Check if the potentialParent is a direct parent of the childClass
+        String directParent = classToParent.get(childClass);
+        if (directParent != null && directParent.equals(potentialParent)) {
+            return true;
+        }
+
+        // Check if the potentialParent is an ancestor (indirect parent) of the childClass
+        while (directParent != null) {
+            if (directParent.equals(potentialParent)) {
+                return true;
+            }
+            directParent = classToParent.get(directParent);
+        }
+
+        return false;
+    }
+    private TypeSymbol getActualType(String typeName, Scope scope) {
+        if (!typeName.equals("SELF_TYPE")) {
+            return (TypeSymbol)SymbolTable.globals.lookup(typeName);
+        }
+
+        Scope currentScope = scope;
+        while (!(currentScope instanceof TypeSymbol)) {
+            currentScope = currentScope.getParent();
+        }
+
+        return (TypeSymbol)currentScope;
     }
     @Override
     public TypeSymbol visit(Id id) {
@@ -105,9 +139,51 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
 
     @Override
     public TypeSymbol visit(Assign asgn) {
-        asgn.id.accept(this);
-        asgn.expr.accept(this);
-        return null;
+        if (asgn.id == null || asgn.expr == null) {
+            return null;
+        }
+        if (asgn.id.token.getText().equals("self")) {
+            SymbolTable.error(
+                    asgn.ctx,
+                    asgn.id.token,
+                    "Cannot assign to self"
+            );
+            return null;
+        }
+        if (asgn.id.getScope() == null) {
+            return null;
+        }
+        var idSymbol = (IdSymbol) asgn.id.getScope().lookup(asgn.id.token.getText());
+        if (idSymbol == null || asgn.id.getScope() == null) {
+            return null;
+        }
+        var idType = getActualType(idSymbol.getType().getName(), asgn.id.getScope());
+        TypeSymbol exprRawType = asgn.expr.accept(this);
+        if (idType == null || exprRawType == null) {
+            return null;
+        }
+        var exprType = getActualType(exprRawType.getName(), asgn.id.getScope());
+        ArrayList<Scope> inheritanceChain = getInheritanceChain(idType);
+
+        if ((inheritanceChain == null || inheritanceChain.contains(exprType))) {
+            SymbolTable.error(
+                    asgn.ctx,
+                    asgn.expr.ctx.start,
+                    "Type " + exprRawType + " of assigned expression is incompatible with declared type "
+                            + idSymbol.getType() + " of identifier " + asgn.id.token.getText()
+            );
+        }
+        else if ((idType.getName().equals("Int") || idType.getName().equals("Bool") || idType.getName().equals("String"))
+        && !idType.getName().equals(exprType.getName())) {
+            SymbolTable.error(
+                    asgn.ctx,
+                    asgn.expr.ctx.start,
+                    "Type " + exprRawType + " of assigned expression is incompatible with declared type "
+                            + idSymbol.getType() + " of identifier " + asgn.id.token.getText()
+            );
+        }
+
+        return exprRawType;
     }
 
     @Override
@@ -365,8 +441,10 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
             }
             parent = SymbolTable.globals.lookup(((TypeSymbol) parent).getParentName());
         }
-        if (at.value != null)
-            at.value.accept(this);
+        if (at.value != null) {
+            TypeSymbol valueType = at.value.accept(this);
+            return valueType;
+        }
 
         return null;
     }
@@ -379,12 +457,49 @@ public class ResolutionPassVisitor implements ASTVisitor<TypeSymbol> {
 
     @Override
     public TypeSymbol visit(Relational rel) {
-        return null;
+        TypeSymbol leftType = rel.left.accept(this);
+        TypeSymbol rightType = rel.right.accept(this);
+        if (rel.op.token.getText().equals("=")) {
+            if (leftType.getName().equals("Int") || leftType.getName().equals("Bool") || leftType.getName().equals("String")) {
+                if (!leftType.getName().equals(rightType.getName())) {
+                    SymbolTable.error(
+                            rel.ctx,
+                            rel.op.token,
+                            "Cannot compare " + leftType.getName() + " with " + rightType.getName()
+                    );
+                }
+            }
+        }
+        else if (rel.op.token.getText().equals("<") || rel.op.token.getText().equals("<=")) {
+            if (leftType != null && leftType != TypeSymbol.INT && !leftType.getName().equals("Int")) {
+                SymbolTable.error(
+                        rel.ctx,
+                        rel.left.token,
+                        "Operand of < has type " + leftType.getName() + " instead of Int"
+                );
+            }
+            if (rightType != null && rightType != TypeSymbol.INT && !rightType.getName().equals("Int")) {
+                SymbolTable.error(
+                        rel.ctx,
+                        rel.right.token,
+                        "Operand of < has type " + rightType.getName() + " instead of Int"
+                );
+            }
+        }
+        return TypeSymbol.BOOL;
     }
 
     @Override
     public TypeSymbol visit(Not not) {
-        return null;
+        TypeSymbol exprType = not.expr.accept(this);
+        if (exprType != null && exprType != TypeSymbol.BOOL && !exprType.getName().equals("Bool")) {
+            SymbolTable.error(
+                    not.ctx,
+                    not.expr.token,
+                    "Operand of not has type " + exprType.getName() + " instead of Bool"
+            );
+        }
+        return TypeSymbol.BOOL;
     }
 
     @Override

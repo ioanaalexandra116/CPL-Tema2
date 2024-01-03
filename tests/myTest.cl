@@ -1,19 +1,21 @@
 class A {
-    f(f : Int) : Int {
-        let u : Int <- u + z,
-            y : Int <- y + u + x + v,
-            v : Int
-        in
-            case y of
-                z : Int => x <- x + z + f + u + y;
-            esac
+    f(a : A) : Object {
+        a <- new A
     };
 
-    g() : A { self };
+    g(a : A) : Object {
+        a <- new B
+    };
 
-    z : Int <- x;
+    h(b : B) : Object {
+        b <- new A
+    };
 
-    x : Int <- x;
+    i(b : B) : Object {
+        b <- new C
+    };
 
-    f : Bool;
+    j : Bool <- not isvoid new B;
 };
+
+class B inherits A {};
